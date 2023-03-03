@@ -91,6 +91,8 @@ a {
   flex-direction: column;
   gap: var(--gap);
 }
+
+/*
 .row:nth-last-of-type(even) > .card {
   transform: translateX(-400%);
   opacity: 0;
@@ -107,6 +109,8 @@ a {
   transform: translateX(0);
   opacity: 1;
 }
+*/
+
 .card {
   background-color: var(--border-color);
   width: 100%;
