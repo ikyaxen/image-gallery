@@ -1,33 +1,35 @@
-const rows = document.querySelectorAll('.row');
-const searchForm = document.getElementById('search-form');
-const search = document.getElementById('search');
+const imageContainer = document.querySelector(".image-container");
+const rows = document.querySelectorAll(".row");
+const searchForm = document.getElementById("search-form");
+const search = document.getElementById("search");
 
-const rowLength = rows.length;
+const PIXABAY_API_KEY = "33942706-aadfb989b398a0b4965c477f0";
 
-const PIXABAY_API_KEY='33942706-aadfb989b398a0b4965c477f0';
-var query = '';
-var API_URL = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&image_type=photo&pretty=true`;
+window.addEventListener("load", () => {
+  update("");
+});
 
-fetch(API_URL)
-  .then(res => res.json())
-  .then(data => {
-    renderImages(data.hits);
-}).catch(err => console.log(err));
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  update(search.value);
+});
 
-document.querySelector('.image-container').onmousemove = e => {
-  for(const card of document.getElementsByClassName("card")) {
+// Cards hover effect
+imageContainer.onmousemove = (e) => {
+  for (const card of document.querySelectorAll(".card")) {
     const rect = card.getBoundingClientRect(),
     x = e.clientX - rect.left,
     y = e.clientY - rect.top;
-    card.style.setProperty("--mouse-x", `${x}px`);
-    card.style.setProperty("--mouse-y", `${y}px`);
-  };
-}
+  card.style.setProperty("--mouse-x", `${x}px`);
+  card.style.setProperty("--mouse-y", `${y}px`);
+  }
+};
 
+/*
 window.addEventListener('scroll', () => {
-  const triggerBottom = window.innerHeight / 5 * 4;
+  const triggerBottom = window.innerHeight;
   document.querySelectorAll('.card').forEach(card => {
-    const cardTop = card.getBoundingClientRect().top;
+    const cardTop = card.getBoundingClientRect().bottom;
     if (cardTop < triggerBottom) {
       card.classList.add('show');
     } else {
@@ -35,12 +37,10 @@ window.addEventListener('scroll', () => {
     }
   });
 });
+*/
 
-window.addEventListener('load', () => {
-});
-
+// Create image card base on data
 function createImageCard(data) {
-
   let imageURL = data.largeImageURL;
   let userImageURL = "";
   let username = data.user;
@@ -49,13 +49,14 @@ function createImageCard(data) {
   let downloads = data.downloads;
 
   if (data.userImageURL === "") {
-    userImageURL = 'https://web.gs.emory.edu/vulnerability/_includes/images/no-image.jpg';
+    userImageURL =
+      "https://web.gs.emory.edu/vulnerability/_includes/images/no-image.jpg";
   } else {
     userImageURL = data.userImageURL;
   }
 
   return `
-  <div class="card show">
+  <div class="card">
     <div class="content">
       <a class="image_link" href="${imageURL}">
         <img class="image" src="${imageURL}" alt="image-by-${username}" />
@@ -76,51 +77,51 @@ function createImageCard(data) {
   `;
 }
 
+function gen_image_api_key(query, type) {
+  return `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&image_type=${type}&pretty=true`;
+}
+
+// Search images by query and type
+async function searchImagesData(query) {
+  let url = gen_image_api_key(query, "all");
+  try {
+    const response = await fetch(url);
+    return await response.json();
+  } catch (err) {
+    alert("Sorry, Something went wrong!");
+    console.log(err);
+  }
+}
+
+function clearImages() {
+  rows.forEach((row) => {
+    row.innerHTML = "";
+  });
+}
+
 function renderImages(data) {
   let current = 0;
-  data.map(data => {
+  data.map((data) => {
     rows.forEach((row, index) => {
       if (current == index) {
         row.innerHTML += createImageCard(data);
       }
     });
     current += 1;
-    if (current == rowLength) {
+    if (current == rows.length) {
       current = 0;
     }
   });
 }
 
-function gen_image_api_key(query, type) {
-  return `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&image_type=${type}&pretty=true`;
-}
-
-function clearImages() {
-  rows.forEach(row => {
-    row.innerHTML = "";
-  });
-}
-
-async function searchImagesData(query) {
-  let url = gen_image_api_key(query, "all");
-  try {
-    const response = await fetch(url);
-    return response.json();
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-searchForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  let query = search.value;
-  searchImagesData(query).then(data => {
+function update(query) {
+  searchImagesData(query).then((data) => {
     if (data.hits.length != 0) {
       clearImages();
       renderImages(data.hits);
     } else {
-      alert('No image found!');
+      alert("No image found!");
     }
     console.log(data);
   });
-});
+}
